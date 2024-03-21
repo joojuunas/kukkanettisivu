@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8" />
+        <title>flower list order by sun</title>
+    </head>
+    <body>
+        {% if sun_flower_list %}
+            <ul>
+            {% for flower in sun_flower_list %}
+                <li><a href="{% url 'kukkatietodb:detail' flower.name_fi %}">{{ flower.name_fi }}</a>
+            </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No flowers to show.</p>
+        {% endif %}
+    </body>
+</html>

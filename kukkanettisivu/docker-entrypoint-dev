@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# Entry point for the Docker container.
+#
+# This is basically a wrapper for "./manage.py", but also provides utility
+# commands for developers that install dependencies, compile translations, run
+# tests and do style check and linting on the codebase.
+#
+# It also ensures that the database is up and running.
+#
+
+set -e
+
+wait_for_database()
+{
+  if test -z "$DATABASE_URL"
+  then
+    echo "error: DATABASE_URL is not set." >&2
+    exit 1
+  fi
+  until psql "$DATABASE_URL" -c "SELECT 1" 2>/dev/null 1>&2
+  do
+    echo "Waiting for database to come up at $DATABASE_URL ..."
+    sleep 1
+  done
+}
+
+PYTHON_PACKAGES="kukkanettisivu"
+
+command=$1
+
+shift
+
+case "$command" in
+  install)
+    pip install *
+    ;;
+ test)
+   test -z "$CI" #&& wait_for_database
+   exec py.test $@
+    ;;
+  test:coverage)
+    test -z "$CI" #&& wait_for_database
+    exec py.test \
+      -vvv \
+      `echo $PYTHON_PACKAGES | sed 's/[^ ]* */--cov &/g'` \
+      --cov-report=term-missing \
+      $@
+    ;;
+  lint)
+    black --check $PYTHON_PACKAGES
+    flake8 $PYTHON_PACKAGES
+    ;;
+  *)
+    #wait_for_database
+    exec ./manage.py "$command" $@
+    ;;
+esac
