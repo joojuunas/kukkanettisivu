@@ -54,7 +54,6 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./kukkanettisivu/knsdbex.pgsql:/exportdata
   
   nginx:
     build:
